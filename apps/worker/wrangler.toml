@@ -1,0 +1,14 @@
+name = "realtime-wait"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# 관리자 데모 키. 로컬 개발에서는 .dev.vars 로 덮어쓴다.
+# 운영 secret 은 `wrangler secret put ADMIN_KEY` 로 주입한다 (toml 에 하드코딩 금지).
+[vars]
+ADMIN_KEY = "demo-admin-key"
+ALLOWED_ORIGIN = "*"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "realtime-wait"
+database_id = "local-dev-placeholder"

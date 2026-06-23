@@ -1,0 +1,18 @@
+{
+  "name": "realtime-wait",
+  "version": "0.1.0",
+  "private": true,
+  "description": "행사/부스 대기열을 관리하는 포트폴리오용 실시간 대기 시스템",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:web": "pnpm --filter @realtime-wait/web dev",
+    "dev:worker": "pnpm --filter @realtime-wait/worker dev",
+    "typecheck": "pnpm -r typecheck",
+    "db:init": "pnpm --filter @realtime-wait/worker db:init",
+    "db:seed": "pnpm --filter @realtime-wait/worker db:seed"
+  }
+}
