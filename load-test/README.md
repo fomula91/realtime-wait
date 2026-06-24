@@ -1,6 +1,6 @@
 # Load Test (k6)
 
-[k6](https://k6.io) 기반 부하 테스트. 계획/결과는 [`../docs/load-test-plan.md`](../docs/load-test-plan.md), [`../docs/load-test-report.md`](../docs/load-test-report.md) 참고.
+[k6](https://k6.io) 기반 부하 테스트. 계획/결과 문서는 내부 설계 위키(JACOB-LLM-WIKI)에서 관리합니다.
 
 ## 사전 준비
 

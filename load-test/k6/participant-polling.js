@@ -21,7 +21,7 @@ export const options = {
   },
   thresholds: {
     // 로컬 wrangler dev 의 버스트 연결 리셋(애플리케이션 오류 아님)을 감안.
-    // 자세한 배경은 mixed-scenario.js 와 docs/load-test-report.md 참고.
+    // 자세한 배경은 mixed-scenario.js 참고. (부하 리포트는 내부 설계 위키에서 관리)
     http_req_failed: ["rate<0.05"],
     "http_req_duration{name:status}": ["p(95)<500"],
   },
