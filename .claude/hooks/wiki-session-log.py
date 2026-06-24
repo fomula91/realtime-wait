@@ -119,7 +119,7 @@ def main():
     lines += [
         "",
         "---",
-        "후보 기록입니다. 정식 문서는 사람이 검토한 뒤 [[80-Projects/realtime-wait]] 에 반영합니다.",
+        "후보 기록입니다. 정식 문서는 사람이 검토한 뒤 [[Projects/realtime-wait]] 에 반영합니다.",
         "",
     ]
 
