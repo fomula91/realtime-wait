@@ -5,6 +5,7 @@ import { adminApi, ApiClientError } from "../../lib/api.js";
 import { usePolling } from "../../lib/usePolling.js";
 import { useAdminKey } from "../../lib/useAdminKey.js";
 import { AdminKeyBar } from "../../components/AdminKeyBar.js";
+import { ErrorRetry, SkeletonRows } from "../../components/States.js";
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "초안",
@@ -74,8 +75,12 @@ export function AdminEventsPage() {
       </div>
 
       {!key && <p className="muted">관리자 키를 입력하세요.</p>}
-      {key && loading && !data && <p className="muted">불러오는 중…</p>}
-      {error && <p className="error">{error}</p>}
+      {key && loading && !data && <SkeletonRows count={3} />}
+      {error && (
+        <div style={{ marginBottom: 14 }}>
+          <ErrorRetry message={error} onRetry={refetch} />
+        </div>
+      )}
       {data?.length === 0 && key && <p className="muted">이벤트가 없습니다.</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

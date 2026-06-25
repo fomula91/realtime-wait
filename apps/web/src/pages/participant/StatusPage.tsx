@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   PARTICIPANT_POLL_INTERVAL_MS,
   type QueueEntryStatusView,
 } from "@realtime-wait/shared";
 import { api, ApiClientError } from "../../lib/api.js";
 import { usePolling } from "../../lib/usePolling.js";
+import { ErrorRetry, SkeletonRows } from "../../components/States.js";
 
 /** 예상 대기 = 내 앞 인원 × 1인당 가정 처리 시간(추정값) */
 const PER_PERSON_MIN = 2;
@@ -37,8 +38,18 @@ export function StatusPage() {
     }
   };
 
-  if (loading && !data) return <p className="muted">불러오는 중…</p>;
-  if (error && !data) return <p className="error">{error}</p>;
+  if (loading && !data)
+    return (
+      <div className="container narrow" style={{ padding: 0 }}>
+        <SkeletonRows count={3} />
+      </div>
+    );
+  if (error && !data)
+    return (
+      <div className="container narrow" style={{ padding: 0 }}>
+        <ErrorRetry message={error} onRetry={refetch} />
+      </div>
+    );
   if (!data) return null;
 
   if (data.status === "called") return <CalledScreen data={data} onCancel={cancel} cancelError={cancelError} />;
@@ -208,7 +219,10 @@ const RESULTS: Record<
 };
 
 function ResultScreen({ data }: { data: QueueEntryStatusView }) {
+  const navigate = useNavigate();
   const r = RESULTS[data.status] ?? RESULTS.expired;
+  // 체크인은 정상 완료, 나머지(취소·노쇼·만료)는 다시 등록할 수 있게 길을 열어 준다
+  const canReRegister = data.status !== "checked_in";
   return (
     <div className="container narrow" style={{ padding: 0 }}>
       <div className="eyebrow">{data.booth_name}</div>
@@ -227,6 +241,15 @@ function ResultScreen({ data }: { data: QueueEntryStatusView }) {
           </div>
         </div>
       </div>
+      {canReRegister && (
+        <button
+          className="block"
+          style={{ marginTop: 14 }}
+          onClick={() => navigate(`/events/${data.event_id}/register`)}
+        >
+          다시 등록하기 →
+        </button>
+      )}
     </div>
   );
 }

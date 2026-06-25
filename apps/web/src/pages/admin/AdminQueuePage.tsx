@@ -9,6 +9,7 @@ import { usePolling } from "../../lib/usePolling.js";
 import { useAdminKey } from "../../lib/useAdminKey.js";
 import { AdminKeyBar } from "../../components/AdminKeyBar.js";
 import { StatusBadge } from "../../components/StatusBadge.js";
+import { EmptyState, ErrorRetry, SkeletonRows } from "../../components/States.js";
 
 type Action = "call" | "check-in" | "no-show";
 
@@ -73,8 +74,12 @@ export function AdminQueuePage() {
         <AdminKeyBar value={key} onChange={setKey} />
 
         {!key && <p className="muted">관리자 키를 입력하세요.</p>}
-        {key && loading && !data && <p className="muted">불러오는 중…</p>}
-        {error && <p className="error">{error}</p>}
+        {key && loading && !data && <SkeletonRows count={4} />}
+        {error && (
+          <div style={{ marginBottom: 14 }}>
+            <ErrorRetry message={error} onRetry={refetch} />
+          </div>
+        )}
         {actionError && <p className="error">{actionError}</p>}
 
         {data && (
@@ -133,7 +138,10 @@ export function AdminQueuePage() {
                 </div>
                 <div className="queue-list">
                   {active.length === 0 && (
-                    <p className="muted">대기 인원이 없습니다.</p>
+                    <EmptyState
+                      title="대기열이 비었어요"
+                      sub="새 참가자를 기다리는 중"
+                    />
                   )}
                   {active.map((e) => {
                     const called = e.status === "called";

@@ -9,6 +9,21 @@ const LABELS: Record<QueueEntryStatus, string> = {
   expired: "만료",
 };
 
+/** 색에만 의존하지 않도록 아이콘 + 라벨을 함께 노출하고 aria-label 로 의미 전달 */
+const ICONS: Record<QueueEntryStatus, string> = {
+  waiting: "●",
+  called: "🔔",
+  checked_in: "✓",
+  no_show: "✕",
+  cancelled: "✕",
+  expired: "⌛",
+};
+
 export function StatusBadge({ status }: { status: QueueEntryStatus }) {
-  return <span className={`badge ${status}`}>{LABELS[status]}</span>;
+  return (
+    <span className={`badge ${status}`} aria-label={`상태: ${LABELS[status]}`}>
+      <span aria-hidden="true">{ICONS[status]}</span>
+      {LABELS[status]}
+    </span>
+  );
 }
