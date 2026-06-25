@@ -14,6 +14,7 @@ export function AdminKeyBar({ value, onChange }: Props) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="demo-admin-key"
+        autoComplete="off"
       />
       <p className="poll-hint">
         MVP 단계의 단순 데모 보호입니다. 키는 브라우저에만 저장됩니다.
