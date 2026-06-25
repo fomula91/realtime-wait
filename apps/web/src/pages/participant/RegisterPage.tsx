@@ -64,59 +64,94 @@ export function RegisterPage() {
   if (loadError) return <p className="error">{loadError}</p>;
 
   return (
-    <>
-      <h1>{event?.name}</h1>
-      {event?.description && <p className="muted">{event.description}</p>}
-
-      <div className="card">
-        <h2>대기 등록</h2>
-        <label htmlFor="booth">부스 선택</label>
-        <select
-          id="booth"
-          value={boothId}
-          onChange={(e) => setBoothId(e.target.value)}
-        >
-          {booths.map((b) => (
-            <option key={b.id} value={b.id} disabled={b.status !== "open"}>
-              {b.name}
-              {b.status !== "open" ? " (대기 불가)" : ""}
-            </option>
-          ))}
-        </select>
-
-        <label htmlFor="name">표시 이름</label>
-        <input
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="예: 홍길동 (실명 아님)"
-          maxLength={60}
-        />
-
-        <label htmlFor="note">메모 (선택)</label>
-        <input
-          id="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="요청 사항 등"
-          maxLength={200}
-        />
-
-        {formError && (
-          <p className="error" style={{ marginTop: 12 }}>
-            {formError}
-          </p>
-        )}
-
-        <div className="row" style={{ marginTop: 16 }}>
-          <button onClick={submit} disabled={!name.trim() || !boothId || submitting}>
-            {submitting ? "등록 중…" : "대기열 등록"}
-          </button>
-        </div>
-        <p className="poll-hint">
-          실제 개인정보는 수집하지 않습니다. 표시용 이름만 사용됩니다.
-        </p>
+    <div className="container narrow" style={{ padding: 0 }}>
+      <div className="eyebrow" style={{ color: "var(--blue)" }}>
+        {event?.name}
       </div>
-    </>
+      <h1 style={{ marginTop: 8 }}>
+        어느 부스에서
+        <br />
+        기다릴까요?
+      </h1>
+
+      <label>부스 선택</label>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {booths.map((b) => {
+          const open = b.status === "open";
+          const selected = b.id === boothId;
+          return (
+            <div
+              key={b.id}
+              className={`select-card${selected ? " selected" : ""}${open ? "" : " disabled"}`}
+              onClick={() => open && setBoothId(b.id)}
+            >
+              <div>
+                <div className="title">{b.name}</div>
+                <div
+                  className="sub"
+                  style={selected ? { color: "var(--blue)" } : undefined}
+                >
+                  {open
+                    ? `운영중 · 현재 호출 ${b.current_number}번`
+                    : "대기 마감"}
+                </div>
+              </div>
+              {open ? (
+                <div className="check">{selected ? "✓" : ""}</div>
+              ) : (
+                <span
+                  style={{
+                    font: "700 11px Pretendard",
+                    color: "var(--muted)",
+                    background: "#e0e0e3",
+                    borderRadius: 999,
+                    padding: "4px 10px",
+                  }}
+                >
+                  마감
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <label>표시 이름</label>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="예: 홍길동 (실명 아님)"
+        maxLength={60}
+      />
+
+      <label>메모 (선택)</label>
+      <input
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="요청 사항 등"
+        maxLength={200}
+      />
+
+      {formError && (
+        <p className="error" style={{ marginTop: 12 }}>
+          {formError}
+        </p>
+      )}
+
+      <button
+        className="block"
+        style={{ marginTop: 18 }}
+        onClick={submit}
+        disabled={!name.trim() || !boothId || submitting}
+      >
+        {submitting ? "등록 중…" : "대기열 등록하기"}
+      </button>
+      <p
+        className="poll-hint"
+        style={{ textAlign: "center", marginTop: 12 }}
+      >
+        표시용 이름만 사용 · 실제 개인정보 미수집
+      </p>
+    </div>
   );
 }

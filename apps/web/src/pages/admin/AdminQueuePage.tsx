@@ -41,87 +41,166 @@ export function AdminQueuePage() {
     }
   };
 
-  const active = data?.filter(
+  const entries = data ?? [];
+  const count = (s: QueueEntryRecord["status"]) =>
+    entries.filter((e) => e.status === s).length;
+  const active = entries.filter(
     (e) => e.status === "waiting" || e.status === "called",
   );
-  const done = data?.filter(
+  const done = entries.filter(
     (e) => !(e.status === "waiting" || e.status === "called"),
   );
+  const nextWaiting = active.find((e) => e.status === "waiting");
 
   return (
     <>
-      <h1>관리자 · 대기열</h1>
-      <p className="muted">부스: {boothId}</p>
-      <AdminKeyBar value={key} onChange={setKey} />
+      <div className="op-topbar">
+        <div className="row" style={{ gap: 16 }}>
+          <span className="brand">realtime-wait</span>
+          <span className="sep" />
+          <div>
+            <div className="ctx-title">대기열</div>
+            <div className="ctx-sub">부스 {boothId}</div>
+          </div>
+        </div>
+        <span className="live">
+          <span className="dot" />
+          {ADMIN_POLL_INTERVAL_MS / 1000}초마다 자동 갱신
+        </span>
+      </div>
 
-      {!key && <p className="muted">관리자 키를 입력하세요.</p>}
-      {key && loading && !data && <p className="muted">불러오는 중…</p>}
-      {error && <p className="error">{error}</p>}
-      {actionError && <p className="error">{actionError}</p>}
+      <div className="op-body">
+        <AdminKeyBar value={key} onChange={setKey} />
 
-      {data && (
-        <>
-          <div className="card">
-            <h2>진행 중 ({active?.length ?? 0})</h2>
-            {active?.length === 0 && <p className="muted">대기 인원이 없습니다.</p>}
-            {active?.map((e) => (
-              <div className="list-item" key={e.id}>
-                <div className="row">
-                  <span className="qnum">{e.queue_number}</span>
+        {!key && <p className="muted">관리자 키를 입력하세요.</p>}
+        {key && loading && !data && <p className="muted">불러오는 중…</p>}
+        {error && <p className="error">{error}</p>}
+        {actionError && <p className="error">{actionError}</p>}
+
+        {data && (
+          <>
+            <div
+              style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap" }}
+            >
+              <div className="stat-strip" style={{ flex: 1, minWidth: 280 }}>
+                <div className="stat">
+                  <div className="k">대기</div>
+                  <div className="v blue">{count("waiting")}</div>
+                </div>
+                <div className="stat">
+                  <div className="k">호출 중</div>
+                  <div className="v amber">{count("called")}</div>
+                </div>
+                <div className="stat">
+                  <div className="k">체크인</div>
+                  <div className="v green">{count("checked_in")}</div>
+                </div>
+                <div className="stat">
+                  <div className="k">노쇼</div>
+                  <div className="v red">{count("no_show")}</div>
+                </div>
+              </div>
+
+              {nextWaiting && (
+                <div className="next-call" style={{ minWidth: 280, margin: 0 }}>
                   <div>
-                    <div>{e.participant_name}</div>
-                    <div className="muted">
-                      <StatusBadge status={e.status} />
-                      {e.participant_note ? ` · ${e.participant_note}` : ""}
+                    <div className="k">다음 대기</div>
+                    <div className="v">
+                      {nextWaiting.queue_number} · {nextWaiting.participant_name}
                     </div>
                   </div>
+                  <button className="small" onClick={() => act("call", nextWaiting)}>
+                    다음 호출 →
+                  </button>
                 </div>
-                <div className="row">
-                  {e.status === "waiting" && (
-                    <button className="small" onClick={() => act("call", e)}>
-                      호출
-                    </button>
+              )}
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1.55fr) minmax(0, 1fr)",
+                gap: 16,
+                marginTop: 16,
+              }}
+            >
+              <div className="card" style={{ margin: 0 }}>
+                <div className="spread" style={{ marginBottom: 14 }}>
+                  <h2 style={{ margin: 0 }}>진행 중</h2>
+                  <span style={{ font: "700 13px Pretendard", color: "var(--dim)" }}>
+                    {active.length}명
+                  </span>
+                </div>
+                <div className="queue-list">
+                  {active.length === 0 && (
+                    <p className="muted">대기 인원이 없습니다.</p>
                   )}
-                  {e.status === "called" && (
-                    <>
-                      <button
-                        className="green small"
-                        onClick={() => act("check-in", e)}
-                      >
-                        체크인
-                      </button>
-                      <button
-                        className="amber small"
-                        onClick={() => act("no-show", e)}
-                      >
-                        노쇼
-                      </button>
-                    </>
-                  )}
+                  {active.map((e) => {
+                    const called = e.status === "called";
+                    return (
+                      <div className={`qrow${called ? " called" : ""}`} key={e.id}>
+                        <div className="tile">{e.queue_number}</div>
+                        <div className="who">
+                          <div className="name">{e.participant_name}</div>
+                          <div className="meta">
+                            {called ? "● 호출됨" : "대기중"}
+                            {e.participant_note ? ` · ${e.participant_note}` : ""}
+                          </div>
+                        </div>
+                        <div className="actions">
+                          {e.status === "waiting" && (
+                            <button className="small" onClick={() => act("call", e)}>
+                              호출
+                            </button>
+                          )}
+                          {called && (
+                            <>
+                              <button
+                                className="green small"
+                                onClick={() => act("check-in", e)}
+                              >
+                                체크인
+                              </button>
+                              <button
+                                className="outline-red small"
+                                onClick={() => act("no-show", e)}
+                              >
+                                노쇼
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="card">
-            <h2>완료/종료 ({done?.length ?? 0})</h2>
-            {done?.length === 0 && <p className="muted">없음</p>}
-            {done?.map((e) => (
-              <div className="list-item" key={e.id}>
-                <div className="row">
-                  <span className="qnum">{e.queue_number}</span>
-                  <span>{e.participant_name}</span>
+              <div className="card" style={{ margin: 0 }}>
+                <div className="spread" style={{ marginBottom: 14 }}>
+                  <h2 style={{ margin: 0 }}>완료 / 종료</h2>
+                  <span style={{ font: "700 13px Pretendard", color: "var(--dim)" }}>
+                    {done.length}명
+                  </span>
                 </div>
-                <StatusBadge status={e.status} />
+                <div className="queue-list">
+                  {done.length === 0 && <p className="muted">없음</p>}
+                  {done.map((e) => (
+                    <div className="done-row" key={e.id}>
+                      <span className="qnum">{e.queue_number}</span>
+                      <span className="name">{e.participant_name}</span>
+                      <StatusBadge status={e.status} />
+                    </div>
+                  ))}
+                </div>
+                <p className="poll-hint">
+                  노쇼는 호출 후 무응답 시 처리되며, 재호출로 되돌릴 수 있습니다.
+                </p>
               </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      <p className="poll-hint">
-        {ADMIN_POLL_INTERVAL_MS / 1000}초마다 자동 갱신됩니다.
-      </p>
+            </div>
+          </>
+        )}
+      </div>
     </>
   );
 }
