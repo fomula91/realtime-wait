@@ -3,7 +3,7 @@
 SessionEnd hook — 세션이 끝나면 작업 내역을 위키 후보 영역에 자동 기록한다.
 
 - 입력: stdin 으로 들어오는 SessionEnd hook JSON (transcript_path, session_id, cwd, reason)
-- 출력: _Inbox/ClaudeCode/<날짜>-<프로젝트>-session.md 작성(후보. 사람이 검토 후 정식 반영)
+- 출력: Projects/realtime-wait/Sessions/<날짜>-<프로젝트>-session.md 작성(후보. 사람이 검토 후 정식 반영)
 - 원칙: 어떤 경우에도 세션 종료를 방해하지 않는다(항상 exit 0).
 """
 import json
@@ -11,7 +11,7 @@ import sys
 import os
 from datetime import datetime
 
-WIKI_INBOX = "/Users/wellbing/Desktop/LLM-WIKI/JACOB-LLM-WIKI/_Inbox/ClaudeCode"
+WIKI_INBOX = "/Users/wellbing/Desktop/LLM-WIKI/JACOB-LLM-WIKI/Projects/realtime-wait/Sessions"
 EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
 
 
