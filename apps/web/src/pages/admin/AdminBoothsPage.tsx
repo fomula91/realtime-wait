@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ADMIN_POLL_INTERVAL_MS,
@@ -16,6 +16,22 @@ const STATUS_LABEL: Record<string, string> = {
   open: "운영중",
   paused: "일시중지",
   closed: "마감",
+};
+
+/** 상태별 배지 색상 클래스 (badge.* — waiting=파랑·called=주황·checked_in=초록·cancelled=빨강) */
+const STATUS_BADGE: Record<string, string> = {
+  draft: "",
+  ready: "waiting",
+  open: "checked_in",
+  paused: "called",
+  closed: "cancelled",
+};
+
+/** '상태순' 정렬용 라이프사이클 순서 (운영중 우선) */
+const STATUS_ORDER = ["open", "paused", "ready", "draft", "closed"];
+const statusRank = (s: string) => {
+  const i = STATUS_ORDER.indexOf(s);
+  return i === -1 ? STATUS_ORDER.length : i;
 };
 
 /** 이 개수를 넘으면 카드 그리드 대신 밀도 리스트로 전환 (규모 적응 · section 06) */
@@ -68,6 +84,13 @@ export function AdminBoothsPage() {
     return m;
   }, [data]);
 
+  // 폴링으로 필터 중인 상태의 부스가 모두 사라지면 칩도 사라지므로 '전체'로 복귀
+  useEffect(() => {
+    if (statusFilter !== "all" && !(statusFilter in statusCounts)) {
+      setStatusFilter("all");
+    }
+  }, [statusFilter, statusCounts]);
+
   const visible = useMemo(() => {
     let list = data ?? [];
     if (statusFilter !== "all")
@@ -76,14 +99,14 @@ export function AdminBoothsPage() {
     if (q) list = list.filter((b) => b.name.toLowerCase().includes(q));
     const sorted = [...list].sort((a, b) => {
       if (sort === "current") return b.current_number - a.current_number;
-      if (sort === "status") return a.status.localeCompare(b.status);
+      if (sort === "status") return statusRank(a.status) - statusRank(b.status);
       return a.name.localeCompare(b.name, "ko");
     });
     return sorted;
   }, [data, statusFilter, query, sort]);
 
   const total = data?.length ?? 0;
-  const dense = total > DENSITY_THRESHOLD;
+  const dense = visible.length > DENSITY_THRESHOLD;
 
   return (
     <>
@@ -184,7 +207,7 @@ function CardGrid({ booths }: { booths: BoothRecord[] }) {
             <div>
               <div className="row" style={{ gap: 8 }}>
                 <span className="title">{b.name}</span>
-                <span className={`badge ${open ? "checked_in" : "cancelled"}`}>
+                <span className={`badge ${STATUS_BADGE[b.status] ?? ""}`}>
                   {STATUS_LABEL[b.status] ?? b.status}
                 </span>
               </div>
@@ -205,12 +228,10 @@ function CardGrid({ booths }: { booths: BoothRecord[] }) {
 function DensityList({ booths }: { booths: BoothRecord[] }) {
   return (
     <div className="density-list">
-      {booths.map((b) => {
-        const open = b.status === "open";
-        return (
+      {booths.map((b) => (
           <div className="density-row" key={b.id}>
             <span className="bname">{b.name}</span>
-            <span className={`badge ${open ? "checked_in" : "cancelled"}`}>
+            <span className={`badge ${STATUS_BADGE[b.status] ?? ""}`}>
               {STATUS_LABEL[b.status] ?? b.status}
             </span>
             <span className="bcall">
@@ -220,8 +241,7 @@ function DensityList({ booths }: { booths: BoothRecord[] }) {
               <button className="outline small">대기열 →</button>
             </Link>
           </div>
-        );
-      })}
+      ))}
     </div>
   );
 }
