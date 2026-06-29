@@ -4,7 +4,8 @@ import type { BoothRecord, EventRecord } from "@realtime-wait/shared";
 import { api, ApiClientError } from "../../lib/api.js";
 
 export function RegisterPage() {
-  const { eventId = "" } = useParams();
+  const { eventCode = "" } = useParams();
+  const eventId = eventCode;
   const navigate = useNavigate();
 
   const [event, setEvent] = useState<EventRecord | null>(null);
@@ -50,7 +51,7 @@ export function RegisterPage() {
         participant_name: name.trim(),
         participant_note: note.trim() || undefined,
       });
-      navigate(`/queue/${entry.id}`);
+      navigate(`/t/${entry.id}`);
     } catch (err) {
       setFormError(
         err instanceof ApiClientError ? err.message : "등록에 실패했습니다",

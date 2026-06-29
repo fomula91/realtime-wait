@@ -36,7 +36,7 @@ export function HomePage() {
       <button
         className="block"
         style={{ marginTop: 14 }}
-        onClick={() => navigate(`/events/${eventId.trim()}/register`)}
+        onClick={() => navigate(`/e/${eventId.trim()}`)}
         disabled={!eventId.trim()}
       >
         부스 보러가기 →
@@ -53,7 +53,7 @@ export function HomePage() {
             대기열을 호출·관리합니다 · 데모 키 <code>demo-admin-key</code>
           </div>
         </div>
-        <button className="outline small" onClick={() => navigate("/admin")}>
+        <button className="outline small" onClick={() => navigate("/login")}>
           관리자 →
         </button>
       </div>

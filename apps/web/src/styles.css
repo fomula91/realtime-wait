@@ -488,7 +488,118 @@ button.small { padding: 11px 18px; font-size: 14px; border-radius: 11px; min-hei
 .density-row .bcall b { color: var(--amber); }
 
 @media (max-width: 720px) {
-  .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  .stat-strip,
+  .stat-strip-5 { grid-template-columns: repeat(2, 1fr); }
   .qrow .actions { flex-direction: column; }
   .density-row { grid-template-columns: 1fr auto; row-gap: 6px; }
+  .booth-grid { grid-template-columns: 1fr; }
+}
+
+/* ===================== roles (section 05/09) ===================== */
+.role-dots { display: inline-flex; gap: 3px; }
+.role-dots i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: 800 12px/1 Pretendard;
+}
+.role-chip.super { background: #ededef; color: var(--ink); }
+.role-chip.event { background: var(--blue-bg); color: var(--blue); }
+.role-chip.booth { background: var(--amber-bg); color: var(--amber-deep); }
+
+/* shell nav (dark topbar) */
+.shell-nav { display: flex; gap: 14px; }
+.shell-nav a { font: 700 13px Pretendard; color: #9aa0ae; }
+.shell-nav a.active { color: #fff; }
+
+.stat-strip-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+/* super dashboard table */
+.list-table {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.list-table-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 18px;
+}
+.list-table-row + .list-table-row { border-top: 1px solid #f0f0f2; }
+.list-table-row .cell-main { flex: 1; min-width: 0; }
+.list-table-row .cell-main .title { font: 700 15px Pretendard; }
+.list-table-row .cell-main .sub { font: 600 11px Pretendard; color: var(--dim); margin-top: 2px; }
+.list-table-row .cell-num { font: 700 14px Pretendard; color: var(--muted); }
+
+/* booth cards */
+.booth-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.zone-tag {
+  font: 700 10px Pretendard;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 3px 7px;
+  margin-left: 4px;
+}
+
+.lock-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 13px 16px;
+  background: #f0f1f4;
+  border-radius: 12px;
+  font: 600 12px/1.5 Pretendard;
+  color: var(--muted);
+}
+
+.scope-list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.scope-list li { display: flex; align-items: center; gap: 10px; font: 600 13px Pretendard; color: var(--muted); }
+
+/* ===================== QR sheet (section 10) ===================== */
+.qr-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px;
+  flex-shrink: 0;
+}
+.qr-img img { display: block; image-rendering: pixelated; }
+
+.qr-sheet { display: grid; gap: 12px; }
+.qr-tile {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: #fff;
+  border: 1px dashed #c8cad0;
+  border-radius: 10px;
+  padding: 14px;
+}
+.qr-meta { min-width: 0; }
+.qr-meta .qr-name { font: 800 14px/1.2 Pretendard; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qr-meta .qr-zone { font: 600 11px Pretendard; color: var(--dim); margin-top: 3px; }
+.qr-meta .qr-code { font: 700 11px ui-monospace, monospace; color: var(--amber-deep); margin-top: 8px; }
+.qr-meta .qr-hint { font: 500 9px Pretendard; color: #b0b0b5; margin-top: 3px; }
+
+@media print {
+  .op-topbar,
+  .nav,
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .container { padding: 0; max-width: none; }
+  .qr-tile { break-inside: avoid; }
 }

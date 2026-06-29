@@ -1,4 +1,5 @@
 import {
+  type BoothRecord,
   type QueueEntryRecord,
   type QueueEntryStatus,
   type QueueEntryStatusView,
@@ -74,6 +75,12 @@ export class QueueService {
   async listByBooth(boothId: string): Promise<QueueEntryRecord[]> {
     await this.boothService.getOrThrow(boothId);
     return this.queue.listByBooth(boothId);
+  }
+
+  /** 큐 엔트리가 속한 부스를 반환(라우트의 범위 가드용) */
+  async boothForEntry(entryId: string): Promise<BoothRecord> {
+    const entry = await this.getOrThrow(entryId);
+    return this.boothService.getOrThrow(entry.booth_id);
   }
 
   /** 참가자 취소 (waiting/called 상태에서만 가능) */

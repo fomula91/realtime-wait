@@ -16,20 +16,20 @@ const PROGRESS_CAP_AHEAD = 15;
 const RING_CIRCUMFERENCE = 754;
 
 export function StatusPage() {
-  const { queueEntryId = "" } = useParams();
+  const { ticketId = "" } = useParams();
   const [cancelError, setCancelError] = useState<string | null>(null);
 
-  const fetcher = useCallback(() => api.getStatus(queueEntryId), [queueEntryId]);
+  const fetcher = useCallback(() => api.getStatus(ticketId), [ticketId]);
   const { data, error, loading, refetch } = usePolling(
     fetcher,
     PARTICIPANT_POLL_INTERVAL_MS,
-    [queueEntryId],
+    [ticketId],
   );
 
   const cancel = async () => {
     setCancelError(null);
     try {
-      await api.cancel(queueEntryId);
+      await api.cancel(ticketId);
       refetch();
     } catch (err) {
       setCancelError(
@@ -245,7 +245,7 @@ function ResultScreen({ data }: { data: QueueEntryStatusView }) {
         <button
           className="block"
           style={{ marginTop: 14 }}
-          onClick={() => navigate(`/events/${data.event_id}/register`)}
+          onClick={() => navigate(`/e/${data.event_id}`)}
         >
           다시 등록하기 →
         </button>

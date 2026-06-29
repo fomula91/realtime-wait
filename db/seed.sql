@@ -3,6 +3,7 @@
 
 DELETE FROM call_logs;
 DELETE FROM queue_entries;
+DELETE FROM admin_tokens;
 DELETE FROM booths;
 DELETE FROM events;
 
@@ -12,12 +13,19 @@ VALUES
    '2026-06-23T00:00:00.000Z', '2026-06-23T10:00:00.000Z',
    '2026-06-23T00:00:00.000Z', '2026-06-23T00:00:00.000Z');
 
-INSERT INTO booths (id, event_id, name, description, status, current_number, created_at, updated_at)
+INSERT INTO booths (id, event_id, name, description, zone, status, current_number, created_at, updated_at)
 VALUES
-  ('booth_a', 'evt_demo', 'AI 상담 부스', '실시간 대기열 데모 A', 'open', 0,
+  ('booth_a', 'evt_demo', 'AI 상담 부스', '실시간 대기열 데모 A', 'A', 'open', 0,
    '2026-06-23T00:00:00.000Z', '2026-06-23T00:00:00.000Z'),
-  ('booth_b', 'evt_demo', '채용 상담 부스', '실시간 대기열 데모 B', 'open', 0,
+  ('booth_b', 'evt_demo', '채용 상담 부스', '실시간 대기열 데모 B', 'B', 'open', 0,
    '2026-06-23T00:00:00.000Z', '2026-06-23T00:00:00.000Z');
+
+-- 데모 범위 토큰: 행사 어드민 1개 + 부스 어드민 2개(QR 로그인용)
+INSERT INTO admin_tokens (token, role, event_id, booth_id, label, created_at, revoked_at)
+VALUES
+  ('evt-demo-token', 'event', 'evt_demo', NULL, '2026 테크 페어 데모', '2026-06-23T00:00:00.000Z', NULL),
+  ('booth-a-token', 'booth', 'evt_demo', 'booth_a', 'AI 상담 부스', '2026-06-23T00:00:00.000Z', NULL),
+  ('booth-b-token', 'booth', 'evt_demo', 'booth_b', '채용 상담 부스', '2026-06-23T00:00:00.000Z', NULL);
 
 INSERT INTO queue_entries
   (id, event_id, booth_id, participant_name, participant_note, queue_number, status, created_at)
