@@ -4,6 +4,8 @@
 
 참가자는 부스 대기열에 등록하고 자신의 대기 상태를 실시간에 가깝게 확인하며, 운영자는 대기열을 보고 호출·체크인·노쇼를 처리합니다.
 
+**🔗 라이브 데모: https://realtime-wait.fomula91.workers.dev** — Cloudflare Workers + D1 단일 오리진 배포. 운영자 데모 키 `demo-admin-key`, 데모 행사 `evt_demo`.
+
 ---
 
 ## 핵심 설계 판단

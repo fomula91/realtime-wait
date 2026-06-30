@@ -16,6 +16,7 @@
     "check:env": "node scripts/check-env.mjs",
     "verify": "corepack pnpm check:env && corepack pnpm install --frozen-lockfile && corepack pnpm typecheck && corepack pnpm test",
     "db:init": "pnpm --filter @realtime-wait/worker db:init",
-    "db:seed": "pnpm --filter @realtime-wait/worker db:seed"
+    "db:seed": "pnpm --filter @realtime-wait/worker db:seed",
+    "deploy": "corepack pnpm --filter @realtime-wait/web build && corepack pnpm --filter @realtime-wait/worker run deploy"
   }
 }

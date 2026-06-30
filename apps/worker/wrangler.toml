@@ -11,4 +11,12 @@ ALLOWED_ORIGIN = "*"
 [[d1_databases]]
 binding = "DB"
 database_name = "realtime-wait"
-database_id = "local-dev-placeholder"
+database_id = "ad0b8f4e-4248-4fde-bb95-9012cd9f9ea1"
+
+# web 빌드 산출물(apps/web/dist)을 같은 오리진에서 서빙한다.
+# /api 외 경로는 Worker.notFound 가 env.ASSETS 로 위임하고,
+# SPA 클라이언트 라우트는 not_found_handling 으로 index.html 을 돌려준다.
+[assets]
+directory = "../web/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"

@@ -4,6 +4,8 @@ export interface Env {
   DB: D1Database;
   ADMIN_KEY: string;
   ALLOWED_ORIGIN: string;
+  /** 배포 시 web 정적 자산 바인딩(SPA 폴백용). 단위 테스트 env 에는 없다. */
+  ASSETS?: Fetcher;
 }
 
 /** Hono context 에 주입되는 변수 타입 */
