@@ -79,15 +79,25 @@ export class QueueService {
   /** 참가자 취소 (waiting/called 상태에서만 가능) */
   async cancel(entryId: string): Promise<QueueEntryRecord> {
     const entry = await this.getOrThrow(entryId);
-    this.assertTransition(entry.status, ["waiting", "called"], "cancel");
-    return this.transition(entry, "cancelled", "cancelled_at", "cancel");
+    return this.transition(
+      entry,
+      "cancelled",
+      "cancelled_at",
+      ["waiting", "called"],
+      "cancel",
+    );
   }
 
   /** 관리자 호출 (waiting → called), 부스 current_number 갱신 */
   async call(entryId: string): Promise<QueueEntryRecord> {
     const entry = await this.getOrThrow(entryId);
-    this.assertTransition(entry.status, ["waiting"], "call");
-    const updated = await this.transition(entry, "called", "called_at", "call");
+    const updated = await this.transition(
+      entry,
+      "called",
+      "called_at",
+      ["waiting"],
+      "call",
+    );
     await this.booths.updateCurrentNumber(
       entry.booth_id,
       entry.queue_number,
@@ -99,15 +109,19 @@ export class QueueService {
   /** 관리자 체크인 (called → checked_in) */
   async checkIn(entryId: string): Promise<QueueEntryRecord> {
     const entry = await this.getOrThrow(entryId);
-    this.assertTransition(entry.status, ["called"], "check-in");
-    return this.transition(entry, "checked_in", "checked_in_at", "check_in");
+    return this.transition(
+      entry,
+      "checked_in",
+      "checked_in_at",
+      ["called"],
+      "check_in",
+    );
   }
 
   /** 관리자 노쇼 (called → no_show) */
   async noShow(entryId: string): Promise<QueueEntryRecord> {
     const entry = await this.getOrThrow(entryId);
-    this.assertTransition(entry.status, ["called"], "no-show");
-    return this.transition(entry, "no_show", "no_show_at", "no_show");
+    return this.transition(entry, "no_show", "no_show_at", ["called"], "no_show");
   }
 
   private async getOrThrow(id: string): Promise<QueueEntryRecord> {
@@ -121,28 +135,32 @@ export class QueueService {
     return entry;
   }
 
-  private assertTransition(
-    current: QueueEntryStatus,
-    allowedFrom: QueueEntryStatus[],
-    action: string,
-  ): void {
-    if (!allowedFrom.includes(current)) {
-      throw new AppError(
-        ERROR_CODES.INVALID_STATE_TRANSITION,
-        `Cannot ${action} from status '${current}'`,
-        409,
-      );
-    }
-  }
-
+  /**
+   * 조건부 UPDATE 로 상태를 전이한다. 현재 상태가 allowedFrom 이 아니면
+   * (잘못된 상태 또는 동시 요청 경합) 갱신 행이 0 이므로 409 를 던진다.
+   */
   private async transition(
     entry: QueueEntryRecord,
     status: QueueEntryStatus,
     timestampColumn: string,
+    allowedFrom: QueueEntryStatus[],
     action: string,
   ): Promise<QueueEntryRecord> {
     const ts = nowIso();
-    await this.queue.updateStatus(entry.id, status, timestampColumn, ts);
+    const changed = await this.queue.updateStatus(
+      entry.id,
+      status,
+      timestampColumn,
+      ts,
+      allowedFrom,
+    );
+    if (!changed) {
+      throw new AppError(
+        ERROR_CODES.INVALID_STATE_TRANSITION,
+        `Cannot ${action} from status '${entry.status}'`,
+        409,
+      );
+    }
     await this.logs.recordCall(
       entry.id,
       entry.booth_id,

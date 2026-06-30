@@ -63,25 +63,31 @@ export class QueueRepository {
       .run();
   }
 
-  /** 상태 전이 + 해당 상태의 timestamp 컬럼 갱신 */
+  /**
+   * 조건부 상태 전이: 현재 상태가 allowedFrom 중 하나일 때만 갱신한다.
+   * 갱신된 행이 있으면(=전이 성공) true, 없으면(=경합/잘못된 상태) false 를 반환한다.
+   */
   async updateStatus(
     id: string,
     status: QueueEntryStatus,
     timestampColumn: string | null,
     timestamp: string,
-  ): Promise<void> {
-    if (timestampColumn) {
-      await this.db
-        .prepare(
-          `UPDATE queue_entries SET status = ?, ${timestampColumn} = ? WHERE id = ?`,
-        )
-        .bind(status, timestamp, id)
-        .run();
-    } else {
-      await this.db
-        .prepare("UPDATE queue_entries SET status = ? WHERE id = ?")
-        .bind(status, id)
-        .run();
-    }
+    allowedFrom: QueueEntryStatus[],
+  ): Promise<boolean> {
+    const placeholders = allowedFrom.map(() => "?").join(", ");
+    const setClause = timestampColumn
+      ? `status = ?, ${timestampColumn} = ?`
+      : "status = ?";
+    const setBinds = timestampColumn ? [status, timestamp] : [status];
+
+    const res = await this.db
+      .prepare(
+        `UPDATE queue_entries SET ${setClause}
+         WHERE id = ? AND status IN (${placeholders})`,
+      )
+      .bind(...setBinds, id, ...allowedFrom)
+      .run();
+
+    return (res.meta?.changes ?? 0) > 0;
   }
 }
