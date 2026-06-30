@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { ADMIN_KEY_HEADER, ADMIN_TOKEN_QUERY } from "@realtime-wait/shared";
 import type { AppBindings } from "../src/env.js";
 import app from "../src/index.js";
+import { createContainer } from "../src/container.js";
 import { EventRepository } from "../src/repositories/event.repository.js";
 import { BoothRepository } from "../src/repositories/booth.repository.js";
 import { TokenRepository } from "../src/repositories/token.repository.js";
@@ -212,4 +213,75 @@ describe("booth 어드민 — 부스 범위", () => {
     const res = await call("/api/admin/booths/booth_a1/queue", { query: BOOTH_A1_TOKEN });
     expect(res.status).toBe(200);
   });
+});
+
+/**
+ * 대기열 상태 변경 라우트의 범위 경계.
+ * call/check-in/no-show 는 모두 boothForEntry → assertCanAccessBooth 로 보호된다.
+ * 각 action 의 전이 전제 상태(call=waiting, check-in/no-show=called)로 entry 를
+ * 심어, 권한 가드가 빠지면 200 으로 통과해버리는 회귀를 잡는다.
+ */
+const MUTATIONS = [
+  { name: "call", suffix: "call", prereq: "waiting" },
+  { name: "check-in", suffix: "check-in", prereq: "called" },
+  { name: "no-show", suffix: "no-show", prereq: "called" },
+] as const;
+
+/** boothId 에 entry 를 만들고 prereq 상태까지 전이시킨 뒤 id 를 돌려준다. */
+async function seedEntry(boothId: string, prereq: "waiting" | "called"): Promise<string> {
+  const { queueService } = createContainer(db);
+  const entry = await queueService.register(boothId, {
+    participant_name: "참가자",
+    participant_note: null,
+  });
+  if (prereq === "called") await queueService.call(entry.id);
+  return entry.id;
+}
+
+function mutate(entryId: string, suffix: string, opts: ReqOpts) {
+  return call(`/api/admin/queue/${entryId}/${suffix}`, { ...opts, method: "POST" });
+}
+
+describe("대기열 상태 변경 — booth 어드민 범위", () => {
+  for (const m of MUTATIONS) {
+    it(`자기 부스 entry 는 ${m.name} 가능(200)`, async () => {
+      const entryId = await seedEntry("booth_a1", m.prereq);
+      const res = await mutate(entryId, m.suffix, { key: BOOTH_A1_TOKEN });
+      expect(res.status).toBe(200);
+    });
+
+    it(`다른 부스 entry 는 ${m.name} 불가(403)`, async () => {
+      const entryId = await seedEntry("booth_b1", m.prereq);
+      const res = await mutate(entryId, m.suffix, { key: BOOTH_A1_TOKEN });
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
+    });
+  }
+});
+
+describe("대기열 상태 변경 — event 어드민 범위", () => {
+  for (const m of MUTATIONS) {
+    it(`자기 행사 부스 entry 는 ${m.name} 가능(200)`, async () => {
+      const entryId = await seedEntry("booth_a1", m.prereq);
+      const res = await mutate(entryId, m.suffix, { key: EVENT_A_TOKEN });
+      expect(res.status).toBe(200);
+    });
+
+    it(`다른 행사 부스 entry 는 ${m.name} 불가(403)`, async () => {
+      const entryId = await seedEntry("booth_b1", m.prereq);
+      const res = await mutate(entryId, m.suffix, { key: EVENT_A_TOKEN });
+      expect(res.status).toBe(403);
+      expect(res.body.error.code).toBe("FORBIDDEN");
+    });
+  }
+});
+
+describe("대기열 상태 변경 — super 는 전체 가능", () => {
+  for (const m of MUTATIONS) {
+    it(`다른 행사 부스 entry 도 ${m.name} 가능(200)`, async () => {
+      const entryId = await seedEntry("booth_b1", m.prereq);
+      const res = await mutate(entryId, m.suffix, { key: SUPER_KEY });
+      expect(res.status).toBe(200);
+    });
+  }
 });
