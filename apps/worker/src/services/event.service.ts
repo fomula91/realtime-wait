@@ -4,11 +4,15 @@ import {
   ERROR_CODES,
 } from "@realtime-wait/shared";
 import { EventRepository } from "../repositories/event.repository.js";
+import { AuthService } from "./auth.service.js";
 import { AppError } from "../lib/errors.js";
 import { genId, nowIso } from "../lib/id.js";
 
 export class EventService {
-  constructor(private readonly events: EventRepository) {}
+  constructor(
+    private readonly events: EventRepository,
+    private readonly authService: AuthService,
+  ) {}
 
   async create(input: CreateEventInput): Promise<EventRecord> {
     const now = nowIso();
@@ -23,6 +27,8 @@ export class EventService {
       updated_at: now,
     };
     await this.events.insert(event);
+    // 행사 어드민 로그인 토큰을 함께 발급한다(데모 인증)
+    await this.authService.issueEventToken(event.id, event.name);
     return event;
   }
 

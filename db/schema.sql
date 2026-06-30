@@ -17,11 +17,25 @@ CREATE TABLE IF NOT EXISTS booths (
   event_id TEXT NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
+  zone TEXT,
   status TEXT NOT NULL DEFAULT 'draft',
   current_number INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   FOREIGN KEY (event_id) REFERENCES events(id)
+);
+
+-- 데모 인증용 범위 토큰(event/booth 역할). super 는 환경변수 데모 키를 쓴다.
+CREATE TABLE IF NOT EXISTS admin_tokens (
+  token TEXT PRIMARY KEY,
+  role TEXT NOT NULL,
+  event_id TEXT,
+  booth_id TEXT,
+  label TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  revoked_at TEXT,
+  FOREIGN KEY (event_id) REFERENCES events(id),
+  FOREIGN KEY (booth_id) REFERENCES booths(id)
 );
 
 CREATE TABLE IF NOT EXISTS queue_entries (
@@ -66,3 +80,5 @@ CREATE INDEX IF NOT EXISTS idx_booths_event ON booths(event_id);
 CREATE INDEX IF NOT EXISTS idx_queue_booth_status ON queue_entries(booth_id, status, queue_number);
 CREATE INDEX IF NOT EXISTS idx_queue_event ON queue_entries(event_id);
 CREATE INDEX IF NOT EXISTS idx_call_logs_entry ON call_logs(queue_entry_id);
+CREATE INDEX IF NOT EXISTS idx_admin_tokens_event ON admin_tokens(event_id);
+CREATE INDEX IF NOT EXISTS idx_admin_tokens_booth ON admin_tokens(booth_id);

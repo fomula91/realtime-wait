@@ -8,7 +8,7 @@ export function Layout() {
         <NavLink to="/" end>
           홈
         </NavLink>
-        <NavLink to="/admin">관리자</NavLink>
+        <NavLink to="/login">관리자</NavLink>
       </nav>
       <div className="container">
         <Outlet />

@@ -32,6 +32,7 @@ export type CreateEventInput = z.infer<typeof createEventSchema>;
 export const createBoothSchema = z.object({
   name: z.string().min(1).max(120),
   description: z.string().max(1000).optional(),
+  zone: z.string().max(40).optional(),
 });
 export type CreateBoothInput = z.infer<typeof createBoothSchema>;
 

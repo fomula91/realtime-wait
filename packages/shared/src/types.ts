@@ -1,4 +1,4 @@
-import type { ErrorCode } from "./constants.js";
+import type { AdminRole, ErrorCode } from "./constants.js";
 
 export type EventStatus = "draft" | "active" | "ended";
 
@@ -33,6 +33,8 @@ export interface BoothRecord {
   event_id: string;
   name: string;
   description: string | null;
+  /** 행사장 구역(예: "A"). QR 일괄 출력·대규모 운영 화면에서 부스를 묶는 데 쓴다. */
+  zone: string | null;
   status: BoothStatus;
   current_number: number;
   created_at: string;
@@ -59,6 +61,42 @@ export interface QueueEntryStatusView extends QueueEntryRecord {
   ahead_count: number;
   booth_name: string;
   booth_current_number: number;
+}
+
+/**
+ * 범위 토큰 레코드(데모 인증).
+ * event/booth 역할은 이 토큰으로 인증한다. super 는 환경변수 데모 키를 쓴다.
+ */
+export interface AdminTokenRecord {
+  token: string;
+  role: Exclude<AdminRole, "super">;
+  event_id: string | null;
+  booth_id: string | null;
+  label: string;
+  created_at: string;
+  revoked_at: string | null;
+}
+
+/**
+ * 인증된 관리자의 역할과 접근 범위.
+ * 미들웨어가 토큰을 해석해 만들고, 라우트가 범위 검사에 사용한다.
+ */
+export interface AdminPrincipal {
+  role: AdminRole;
+  /** event/booth 역할의 소속 행사. super 는 null. */
+  event_id: string | null;
+  /** booth 역할의 담당 부스. super/event 는 null. */
+  booth_id: string | null;
+  /** 화면 표시용 라벨(부스명·행사명·"슈퍼 어드민"). */
+  label: string;
+}
+
+/** 부스 QR 일괄 출력용 항목: 부스 정보 + 로그인 토큰 */
+export interface BoothQrItem {
+  booth_id: string;
+  name: string;
+  zone: string | null;
+  token: string;
 }
 
 /** 표준 API 응답 형식 */

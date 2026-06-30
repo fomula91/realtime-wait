@@ -1,5 +1,8 @@
 import type {
+  AdminPrincipal,
+  AdminTokenRecord,
   ApiResponse,
+  BoothQrItem,
   BoothRecord,
   CreateBoothInput,
   CreateEventInput,
@@ -61,8 +64,12 @@ export const api = {
     }),
 };
 
-// --- Admin (데모 키 필요) ---
+// --- Admin (데모 키/토큰 필요) ---
 export const adminApi = {
+  /** 제공한 키/토큰의 역할·범위(principal)를 확인한다 (로그인·가드용) */
+  getMe: (adminKey: string) =>
+    request<AdminPrincipal>(`/api/admin/me`, { adminKey }),
+
   createEvent: (adminKey: string, input: CreateEventInput) =>
     request<EventRecord>(`/api/admin/events`, {
       method: "POST",
@@ -102,6 +109,28 @@ export const adminApi = {
 
   noShow: (adminKey: string, queueEntryId: string) =>
     request<QueueEntryRecord>(`/api/admin/queue/${queueEntryId}/no-show`, {
+      method: "POST",
+      adminKey,
+    }),
+
+  /** 행사 어드민 로그인 토큰 조회 — 슈퍼가 행사 담당자에게 배포 (슈퍼·행사) */
+  getEventToken: (adminKey: string, eventId: string) =>
+    request<AdminTokenRecord>(`/api/admin/events/${eventId}/token`, { adminKey }),
+
+  /** 행사 로그인 토큰 회전 — 분실·유출 시 무효화 후 재발급 (슈퍼 전용) */
+  rotateEventToken: (adminKey: string, eventId: string) =>
+    request<AdminTokenRecord>(`/api/admin/events/${eventId}/token/rotate`, {
+      method: "POST",
+      adminKey,
+    }),
+
+  /** 한 행사의 부스 로그인 QR 일괄 출력 목록 (슈퍼·행사) */
+  getQrSheet: (adminKey: string, eventId: string) =>
+    request<BoothQrItem[]>(`/api/admin/events/${eventId}/qr-sheet`, { adminKey }),
+
+  /** 부스 로그인 토큰 회전 — 분실·유출 시 무효화 후 재발급 (슈퍼·행사) */
+  rotateBoothToken: (adminKey: string, boothId: string) =>
+    request<AdminTokenRecord>(`/api/admin/booths/${boothId}/token/rotate`, {
       method: "POST",
       adminKey,
     }),

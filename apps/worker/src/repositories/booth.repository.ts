@@ -21,14 +21,15 @@ export class BoothRepository {
   async insert(booth: BoothRecord): Promise<void> {
     await this.db
       .prepare(
-        `INSERT INTO booths (id, event_id, name, description, status, current_number, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO booths (id, event_id, name, description, zone, status, current_number, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         booth.id,
         booth.event_id,
         booth.name,
         booth.description,
+        booth.zone,
         booth.status,
         booth.current_number,
         booth.created_at,
