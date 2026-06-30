@@ -1,3 +1,12 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# pnpm 10+ 는 의존성 빌드 스크립트를 기본 차단하고 승인을 요구한다(approve-builds).
+# 비대화형 `pnpm verify` 가 이 정책에서 멈추지 않도록, 빌드가 필요한 dev 전용
+# 전이 의존성(전부 wrangler 계열)을 미리 승인해 둔다. pnpm 9 는 이 키를 무시하고
+# 어차피 자동 빌드하므로 양쪽 버전에서 동작이 같아진다.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
