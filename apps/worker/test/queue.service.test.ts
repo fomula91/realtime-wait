@@ -80,6 +80,22 @@ describe("QueueService 상태 전이 (정상 경로)", () => {
     expect(checkedIn.checked_in_at).not.toBeNull();
   });
 
+  it("역순 호출에도 부스 current_number 는 뒤로 가지 않는다(단조 증가)", async () => {
+    const first = await register(); // queue_number 1
+    const second = await register(); // queue_number 2
+    const booths = new BoothRepository(db);
+
+    await service.call(second.id); // 큰 번호 먼저 호출
+    expect((await booths.findById(BOOTH_ID))?.current_number).toBe(
+      second.queue_number,
+    );
+
+    await service.call(first.id); // 작은 번호를 나중에 호출 → 표시는 그대로 2 유지
+    expect((await booths.findById(BOOTH_ID))?.current_number).toBe(
+      second.queue_number,
+    );
+  });
+
   it("호출 후 노쇼로 전이된다", async () => {
     const entry = await register();
     await service.call(entry.id);
