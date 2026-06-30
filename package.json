@@ -12,6 +12,8 @@
     "dev:web": "pnpm --filter @realtime-wait/web dev",
     "dev:worker": "pnpm --filter @realtime-wait/worker dev",
     "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "verify": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm test",
     "db:init": "pnpm --filter @realtime-wait/worker db:init",
     "db:seed": "pnpm --filter @realtime-wait/worker db:seed"
   }
