@@ -140,3 +140,32 @@ describe("참가자 흐름 — 오류 경계", () => {
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });
 });
+
+describe("클라이언트 에러 비콘 — POST /api/client-errors (ADR-0009)", () => {
+  it("유효한 페이로드는 200 으로 수신 확인한다", async () => {
+    const res = await call("/api/client-errors", {
+      method: "POST",
+      body: { source: "render", message: "TypeError: boom" },
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.data.received).toBe(true);
+  });
+
+  it("잘못된 source 는 400 VALIDATION_ERROR", async () => {
+    const res = await call("/api/client-errors", {
+      method: "POST",
+      body: { source: "not-a-source", message: "boom" },
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("필수 필드(message) 누락도 400 VALIDATION_ERROR", async () => {
+    const res = await call("/api/client-errors", {
+      method: "POST",
+      body: { source: "api" },
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+  });
+});

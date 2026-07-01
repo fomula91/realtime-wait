@@ -1,10 +1,18 @@
 import { Hono } from "hono";
-import { registerQueueSchema } from "@realtime-wait/shared";
+import { registerQueueSchema, clientErrorSchema } from "@realtime-wait/shared";
 import type { AppBindings } from "../env.js";
 import { createContainer } from "../container.js";
 import { ok } from "../lib/errors.js";
 
 export const publicRoutes = new Hono<AppBindings>();
+
+// POST /api/client-errors — 프론트 에러 비콘 수집 (ADR-0009 관측성).
+// 최소 페이로드·PII 미수집. 클라이언트 에러는 서버 에러와 구분되게 별도 태그로 로깅한다.
+publicRoutes.post("/client-errors", async (c) => {
+  const body = clientErrorSchema.parse(await c.req.json());
+  console.warn(JSON.stringify({ tag: "client_error", ...body }));
+  return ok(c, { received: true });
+});
 
 // GET /api/events/:eventId
 publicRoutes.get("/events/:eventId", async (c) => {

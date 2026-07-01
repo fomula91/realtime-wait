@@ -24,6 +24,31 @@ export class ApiClientError extends Error {
   }
 }
 
+/**
+ * 클라이언트 에러 비콘 (ADR-0009 관측성). best-effort — 실패해도 본 경로를 막지 않는다.
+ * 에러 메타만 담고 개인정보는 보내지 않는다.
+ */
+export function reportClientError(payload: {
+  source: "api" | "render";
+  message: string;
+  path?: string;
+  code?: string;
+}): void {
+  try {
+    const body = JSON.stringify({
+      ...payload,
+      path: payload.path ?? location.pathname,
+      userAgent: navigator.userAgent,
+    });
+    navigator.sendBeacon?.(
+      "/api/client-errors",
+      new Blob([body], { type: "application/json" }),
+    );
+  } catch {
+    /* best-effort: 비콘 실패는 무시 */
+  }
+}
+
 async function request<T>(
   path: string,
   init?: RequestInit & { adminKey?: string },
@@ -32,10 +57,26 @@ async function request<T>(
   if (init?.body) headers.set("Content-Type", "application/json");
   if (init?.adminKey) headers.set(ADMIN_KEY_HEADER, init.adminKey);
 
-  const res = await fetch(path, { ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(path, { ...init, headers });
+  } catch (err) {
+    // 네트워크 실패는 예기치 못한 에러로 보고한다.
+    reportClientError({ source: "api", message: `network error: ${String(err)}`, path });
+    throw err;
+  }
   const json = (await res.json()) as ApiResponse<T>;
 
   if (!json.ok) {
+    // 예기치 못한 서버 장애(5xx)만 보고한다. 도메인 4xx(409/404/400)는 정상 신호라 제외.
+    if (res.status >= 500) {
+      reportClientError({
+        source: "api",
+        message: json.error.message,
+        code: json.error.code,
+        path,
+      });
+    }
     throw new ApiClientError(json.error.code, json.error.message);
   }
   return json.data;

@@ -2,6 +2,10 @@ name = "realtime-wait"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
+# 관측성(ADR-0009): 예외·요청 메타데이터를 Workers Logs 대시보드에 영속·검색되게 한다.
+[observability]
+enabled = true
+
 # 관리자 데모 키. 로컬 개발에서는 .dev.vars 로 덮어쓴다.
 # 운영 secret 은 `wrangler secret put ADMIN_KEY` 로 주입한다 (toml 에 하드코딩 금지).
 [vars]
