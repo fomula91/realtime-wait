@@ -68,7 +68,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 # 이 저장소의 검증 단계 (Verification Stages)
 
-변경 후 무엇을 돌릴지 추측하지 말고 아래 표를 따른다. 단계는 빠르고 결정적인 것부터 느리고 수동적인 것 순서다: **unit → route → type/build → k6 load**. 앞 단계가 깨지면 뒷 단계는 의미가 없으니 순서대로 본다.
+변경 후 무엇을 돌릴지 추측하지 말고 아래 표를 따른다. 단계는 빠르고 결정적인 것부터 느리고 수동적인 것 순서다: **unit(worker/web/shared) → route → type/build → k6 load · E2E**. 앞 단계가 깨지면 뒷 단계는 의미가 없으니 순서대로 본다.
 
 ## 변경 종류 → 실행할 검증
 
@@ -76,11 +76,13 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | --- | --- | --- |
 | `services/*`, `lib/*` (도메인·상태 전이 로직) | **unit**: `pnpm --filter @realtime-wait/worker test queue.service scope` | 순수/서비스 로직. 네트워크·앱 부팅 없음 |
 | `routes/*`, `middleware/*`, 권한(`lib/scope.ts`) | **route**: `pnpm --filter @realtime-wait/worker test admin-auth public-routes` | `app.request()`로 미들웨어+라우트+셰임 D1 통과. 상태코드/에러코드 고정 |
-| `packages/shared`, 타입·zod 스키마 | **type**: `pnpm typecheck` + 위 영향 받는 test | 타입 계약이 소비처(worker/web)와 맞는지 |
+| `apps/web/*` (컴포넌트·훅·상태→UI 매핑) | **web unit**: `pnpm --filter @realtime-wait/web test` | vitest+testing-library+jsdom. usePolling(폴링·무음갱신)·StatusBadge·States. `pnpm verify`(test)에 포함 |
+| `packages/shared`, 타입·zod 스키마 | **type + shared unit**: `pnpm typecheck` + `pnpm --filter @realtime-wait/shared test` | 타입 계약이 소비처(worker/web)와 맞는지 + zod 스키마 계약(둘 다 verify에 포함) |
 | 의존성·락파일·`scripts/`·`.npmrc`·CI | **build/verify**: `pnpm verify` | 환경 점검 → frozen install → typecheck → test 전체 |
 | 성능 특성(폴링 주기, 동시성, 인덱스, 쿼리) | **k6 load**: 아래 "k6는 별도" 참고 | 정확성이 아니라 **부하 거동**만 본다 |
+| 참가자↔운영자 전체 흐름(등록·폴링·상태전이 UI) | **E2E**: 아래 "E2E는 별도" 참고 | 폴링+상태머신+운영자 액션이 *함께* 동작함을 검증. verify와 분리 |
 
-> 한 PR이 여러 곳을 건드리면 가장 무거운 단계까지 포함한다. 전부 묶어 한 번에 보려면 `pnpm verify`(unit+route+type) 하나로 충분하고, 부하 회귀가 의심될 때만 k6를 추가한다.
+> 한 PR이 여러 곳을 건드리면 가장 무거운 단계까지 포함한다. 전부 묶어 한 번에 보려면 `pnpm verify`(worker+web+shared unit + type) 하나로 충분하고, 부하 회귀가 의심될 때만 k6, 참가자↔운영자 흐름을 건드렸을 때만 E2E를 추가한다.
 
 ## `pnpm verify`는 공식 입구다 (우회 금지)
 
@@ -95,6 +97,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **목적이 다르다.** vitest(unit/route)는 **정확성**(상태코드·전이·권한·검증)을 본다. k6는 **성능·동시성 거동**(req/s, 지연, 경합 시 409 비율)을 본다. 서로 대체하지 않는다.
 - **CI/`pnpm test`에 포함되지 않는다.** 실행 중인 worker가 필요하다: `pnpm --filter @realtime-wait/worker db:reset && pnpm dev:worker` (→ `http://localhost:8787`) 후 `k6 run load-test/k6/<scenario>.js`.
 - **409는 k6에서 정상이다.** 낙관적 동시성 제어상 동시 호출의 패배자는 409다 — 부하 테스트 실패가 아니다(`operator-calling.js` 주석 참고). 정확성 회귀는 route test에서 잡고, k6로 잡지 않는다.
+
+## E2E는 별도다 (k6처럼 verify와 분리)
+
+- **목적이 다르다.** vitest(unit/route/web)는 계층별 **단위 정확성**을, E2E(Playwright)는 **참가자↔운영자 전체 흐름이 브라우저에서 함께 동작**함을 본다: 등록 → 상태 폴링 → 운영자 호출 → called 반영 → 체크인 → checked_in 반영(`e2e/core-flow.spec.ts`).
+- **`pnpm verify`에 포함되지 않는다.** `pnpm e2e`(= `playwright test`)로 별도 실행한다. `playwright.config.ts`의 `webServer`가 worker(:8787)+web(:5173) dev 서버를 자동 기동하고, `e2e/global-setup.ts`가 시작 전 로컬 D1 을 `db:reset`으로 초기화한다. 최초 1회 `npx playwright install chromium` 필요(브라우저 바이너리는 커밋 안 함).
+- **결정성 전략.** booth_b(시드 대기열 없음)에 등록해 참가자를 1번으로 만들고, 운영자 행을 **참가자 이름으로 특정**해 호출·체크인한다(잔존 데이터에 견고). 폴링 전이(5s)는 `expect(...).toBeVisible({ timeout })`의 자동 재시도로 기다린다.
 
 ## 실패 시 원인 분류
 

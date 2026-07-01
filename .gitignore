@@ -9,3 +9,7 @@ dist/
 !.env.example
 coverage/
 *.log
+
+# Playwright E2E 산출물
+test-results/
+playwright-report/
