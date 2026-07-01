@@ -9,6 +9,14 @@ import { check, sleep } from "k6";
 import { BASE_URL, EVENT_ID, BOOTH_ID, jsonHeaders } from "./lib/config.js";
 
 const POLL_INTERVAL_S = 5;
+// 지터 실험용(before/after): JITTER_S=0(기본)이면 동기화 폴링, >0 이면 주기에 ±지터를 줘
+// 클라이언트 위상을 분산한다. `k6 run -e JITTER_S=2.5 ...` 로 after 를 측정.
+const JITTER_S = Number(__ENV.JITTER_S || 0);
+
+function pollSleep() {
+  const jitter = JITTER_S > 0 ? (Math.random() * 2 - 1) * JITTER_S : 0;
+  sleep(POLL_INTERVAL_S + jitter);
+}
 
 export const options = {
   scenarios: {
@@ -45,6 +53,9 @@ export default function () {
     return;
   }
 
+  // 지터 모드: 초기 위상을 0..주기로 분산해 constant-vus 의 동시 출발 정렬을 깬다.
+  if (JITTER_S > 0) sleep(Math.random() * POLL_INTERVAL_S);
+
   // 동일 entry 를 5초 주기로 6회 폴링 (약 30초간 대기 화면을 본다고 가정)
   for (let i = 0; i < 6; i++) {
     const statusRes = http.get(
@@ -55,6 +66,6 @@ export default function () {
       "status 200": (r) => r.status === 200,
       "has ahead_count": (r) => r.json("data.ahead_count") !== undefined,
     });
-    sleep(POLL_INTERVAL_S);
+    pollSleep();
   }
 }

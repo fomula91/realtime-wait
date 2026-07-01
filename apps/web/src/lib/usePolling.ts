@@ -38,16 +38,27 @@ export function usePolling<T>(
   }, []);
 
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    // 폴링 위상 지터: 여러 클라이언트가 같은 순간에 겹쳐 쏘는 "동기화 버스트"를 완화한다.
+    // 평균 주기는 intervalMs 로 유지(±10%)해 "요청량 = 사용자수 × 1/주기" 예측을 깨지 않는다.
+    const nextDelay = () =>
+      intervalMs + (Math.random() * 2 - 1) * intervalMs * 0.1;
+    const scheduleNext = () => {
+      timer = setTimeout(() => {
+        void tick();
+        scheduleNext();
+      }, nextDelay());
+    };
 
     const start = () => {
       if (timer) return;
-      void tick();
-      timer = setInterval(() => void tick(), intervalMs);
+      void tick(); // 첫 조회는 즉시 — 첫 렌더 지연 없음
+      scheduleNext(); // 이후는 주기±지터로 위상 분산
     };
     const stop = () => {
       if (timer) {
-        clearInterval(timer);
+        clearTimeout(timer);
         timer = null;
       }
     };

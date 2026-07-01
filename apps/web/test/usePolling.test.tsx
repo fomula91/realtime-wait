@@ -39,8 +39,9 @@ describe("usePolling", () => {
     });
     expect(result.current.data).toBe("v1");
 
+    // 위상 지터로 다음 폴링은 주기±10%(최대 ~5.5s) 뒤 → 6s 진행이면 정확히 1회 더 보장.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(5000);
+      await vi.advanceTimersByTimeAsync(6000);
     });
     expect(result.current.data).toBe("v2");
     expect(result.current.loading).toBe(false); // 무음 갱신
