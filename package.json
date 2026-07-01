@@ -5,7 +5,7 @@
   "description": "행사/부스 대기열을 관리하는 포트폴리오용 실시간 대기 시스템",
   "packageManager": "pnpm@9.15.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "build": "corepack pnpm -r build",

@@ -6,6 +6,7 @@
 // 코드 실패와 출력으로 구분 가능하게 한다.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 const pkg = JSON.parse(
   readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8"),
@@ -47,6 +48,18 @@ if (minMajor && nodeMajor < minMajor) {
   envError(
     `node 버전 미달: 실행 중 v${process.versions.node}, 요구 "${required}"`,
     `node ${minMajor} 이상으로 전환하세요`,
+  );
+}
+
+// 3) node:sqlite 로드 가능 여부(테스트 셰임 D1 이 요구).
+// 메이저 하한만으론 flag/백포트 차이(22.5~22.12 는 --experimental-sqlite 필요)를 못 걸러서,
+// 능력 자체를 실제 로드로 확인한다. Node 20 CI 실패("No such built-in module: node:sqlite")를 여기서 먼저 잡는다.
+try {
+  createRequire(import.meta.url)("node:sqlite");
+} catch {
+  envError(
+    "node:sqlite 를 로드할 수 없습니다(테스트 셰임 D1 이 요구)",
+    "node 22.5+ (flag 없이 node:sqlite 지원 — 권장 22 LTS 또는 24) 로 전환하세요",
   );
 }
 

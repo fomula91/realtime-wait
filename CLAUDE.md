@@ -111,7 +111,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | 실제 출력에 보이는 것 | 분류 | 대응 |
 | --- | --- | --- |
 | `[check-env] ENVIRONMENT ERROR: pnpm 버전 불일치` | **환경**(pnpm 버전) | `corepack enable && corepack use pnpm@9.15.0` |
-| `[check-env] ENVIRONMENT ERROR: node 버전 미달` | **환경**(node 버전) | node 20+ 로 전환 |
+| `[check-env] ENVIRONMENT ERROR: node 버전 미달` | **환경**(node 버전) | node 22+ 로 전환 |
+| `[check-env] ENVIRONMENT ERROR: node:sqlite 를 로드할 수 없습니다` / vitest `No such built-in module: node:sqlite` | **환경**(node:sqlite 미지원) | 테스트 셰임 D1 이 `node:sqlite`(22.5+) 요구. node 22 LTS/24 로 전환. **CI 는 `node-version: 24`** 고정 |
 | `ERR_PNPM_OUTDATED_LOCKFILE` (frozen install) | **의존성/락파일** | `pnpm install` 후 `pnpm-lock.yaml` 커밋. 코드 문제 아님 |
 | `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR` / "전체 재설치" 프롬프트 | **환경**(node_modules 상태 불일치) | `CI=true pnpm verify` 또는 `node_modules` 지우고 재설치. 새 클론엔 없음 |
 | `approve-builds` 프롬프트 / `Ignored build scripts` | **환경**(pnpm 10+ 정책) | `onlyBuiltDependencies`로 이미 해소. 새 빌드 의존성이면 거기에 추가 |

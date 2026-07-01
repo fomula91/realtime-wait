@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - run: corepack enable
       # verify 가 내부에서 frozen install 까지 수행한다(check:env 가 먼저 도는 순서 유지)
       - run: corepack pnpm verify
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - run: corepack enable
       - run: corepack pnpm install --frozen-lockfile
       # 루트 deploy 스크립트 재사용: web build → wrangler deploy (단일 출처, 드리프트 방지)
